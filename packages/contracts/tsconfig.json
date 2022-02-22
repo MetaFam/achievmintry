@@ -12,14 +12,5 @@
     "strictNullChecks": false
   },
   "include": ["./scripts", "./test"],
-  "files": ["./hardhat.config.ts"],
-  "exclude": [
-    "**/node_modules/**",
-    "**/packages/subgraph/**",
-    "**/packages/**/tests/**",
-    "**/packages/**/types/**",
-    "**/packages/**/dist/**",
-    "**/packages/**/build/**",
-    "**/packages/**/out/**"
-  ]
+  "files": ["./hardhat.config.ts"]
 }
