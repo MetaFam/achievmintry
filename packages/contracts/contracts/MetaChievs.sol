@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.0;
 
@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./lib/ChievUtils.sol";
 
 /// @title Chievs
 /// @author Dekan Brown <dekanbrown[at]odyssy.io>
@@ -76,18 +77,6 @@ contract MetaChievs is ERC721URIStorage, ERC721Enumerable, Ownable {
     event SetTokenUri(uint256 indexed tokenId, string tokenURI);
     event SetTypeCode(uint256 indexed tokenId, uint256 indexed typeCode);
 
-    struct Chiev {
-        uint256 priceFinney;
-        uint256 numClonesAllowed;
-        uint256 numClonesInWild;
-        uint256 clonedFromId;
-        uint256 permTokenId;
-        uint256 permTokenMin;
-        uint256 typeCode;
-        string details;
-    }
-
-    Chiev[] public chievs;
     uint256 public cloneFeePercentage = 50;
     uint256 public minterTokenRole = 0;
     bool public isMintable = true;
@@ -98,20 +87,7 @@ contract MetaChievs is ERC721URIStorage, ERC721Enumerable, Ownable {
     }
 
     constructor() ERC721("MetaChievs", "CHIEV") {
-        // If the array is new, skip over the first index.
-        if (chievs.length == 0) {
-            Chiev memory _dummyChiev = Chiev({
-                priceFinney: 0,
-                numClonesAllowed: 0,
-                numClonesInWild: 0,
-                clonedFromId: 0,
-                permTokenId: 0,
-                permTokenMin: 0,
-                typeCode: 0,
-                details: ""
-            });
-            chievs.push(_dummyChiev);
-        }
+        ChievUtils.initStorage();
     }
 
     /// @dev mint(): Mint a new Gen0 Chievs.  These are the tokens that other Chievs will be "cloned from".
@@ -128,20 +104,18 @@ contract MetaChievs is ERC721URIStorage, ERC721Enumerable, Ownable {
         string memory _tokenURI,
         uint256 _typeCode
     ) public mintable onlyOwnerOrRole returns (uint256 tokenId) {
-        Chiev memory _chiev = Chiev({
+        ChievUtils.Chiev memory _chiev = ChievUtils.Chiev({
             priceFinney: _priceFinney,
             numClonesAllowed: _numClonesAllowed,
             numClonesInWild: 0,
-            clonedFromId: 0,
             permTokenId: 0,
             permTokenMin: 0,
             typeCode: _typeCode,
-            details: ""
+            details: "",
+            clonedFromId: ChievUtils.chievCount()
         });
 
-        chievs.push(_chiev);
-        tokenId = chievs.length - 1;
-        chievs[tokenId].clonedFromId = tokenId;
+        ChievUtils.pushChiev(_chiev);
 
         _mint(_to, tokenId);
         _setTokenURI(tokenId, _tokenURI);
@@ -175,17 +149,17 @@ contract MetaChievs is ERC721URIStorage, ERC721Enumerable, Ownable {
         string memory _tokenURI,
         uint256 _typeCode
     ) public mintable onlyOwnerOrRole returns (uint256 tokenId) {
-        Chiev memory _chiev = Chiev({
+        ChievUtils.Chiev memory _chiev = ChievUtils.Chiev({
             priceFinney: _priceFinney,
             numClonesAllowed: _numClonesAllowed,
             numClonesInWild: 0,
-            clonedFromId: 0,
             permTokenId: _permTokenId,
             permTokenMin: _permTokenMin,
             typeCode: _typeCode,
-            details: ""
+            details: "",
+            clonedFromId: ChievUtils.chievCount()
         });
-        Chiev memory _gen0Chiev = chievs[_permTokenId];
+        ChievUtils.Chiev storage _gen0Chiev = ChievUtils.chievs(_permTokenId);
         require(
             _gen0Chiev.numClonesInWild <= _gen0Chiev.numClonesAllowed,
             "invalid perm token"
@@ -197,10 +171,7 @@ contract MetaChievs is ERC721URIStorage, ERC721Enumerable, Ownable {
             "invalid min"
         );
 
-        chievs.push(_chiev);
-        tokenId = chievs.length - 1;
-        chievs[tokenId].clonedFromId = tokenId;
-
+        ChievUtils.pushChiev(_chiev);
         _mint(_to, tokenId);
         _setTokenURI(tokenId, _tokenURI);
 
@@ -223,7 +194,7 @@ contract MetaChievs is ERC721URIStorage, ERC721Enumerable, Ownable {
     {
         address payable ownerPayable = payable(owner());
 
-        Chiev memory _chiev = chievs[_tokenId];
+        ChievUtils.Chiev storage _chiev = ChievUtils.chievs(_tokenId);
 
         uint256 cloningCost = _chiev.priceFinney * 10**15 * _numClonesRequested;
 
@@ -253,7 +224,7 @@ contract MetaChievs is ERC721URIStorage, ERC721Enumerable, Ownable {
         string memory _details
     ) public payable mintable {
         // Grab existing Chiev blueprint
-        Chiev memory _chiev = chievs[_tokenId];
+        ChievUtils.Chiev storage _chiev = ChievUtils.chievs(_tokenId);
 
         uint256 _numClonesRequested = _addresses.length;
         uint256 cloningCost = _chiev.priceFinney * 10**15 * _numClonesRequested;
@@ -277,11 +248,10 @@ contract MetaChievs is ERC721URIStorage, ERC721Enumerable, Ownable {
 
         // Update original chiev struct in the array
         _chiev.numClonesInWild += _numClonesRequested;
-        chievs[_tokenId] = _chiev;
 
         // Create new chiev, don't let it be cloned
         for (uint256 i = 0; i < _numClonesRequested; i++) {
-            Chiev memory _newChiev;
+            ChievUtils.Chiev memory _newChiev;
             _newChiev.priceFinney = _chiev.priceFinney;
             _newChiev.numClonesAllowed = 0;
             _newChiev.numClonesInWild = 0;
@@ -289,8 +259,8 @@ contract MetaChievs is ERC721URIStorage, ERC721Enumerable, Ownable {
             _newChiev.details = _details;
 
             // Note that Solidity uses 0 as a default value when an item is not found in a mapping.
-            chievs.push(_newChiev);
-            uint256 newTokenId = chievs.length - 1;
+            ChievUtils.pushChiev(_chiev);
+            uint256 newTokenId = ChievUtils.chievCount() - 1;
 
             // Mint the new chievs to the _to account
             _mint(_addresses[i], newTokenId);
@@ -311,14 +281,13 @@ contract MetaChievs is ERC721URIStorage, ERC721Enumerable, Ownable {
     /// @dev burn(): Burn Chievs token.
     /// @param _tokenId The Chievs ID to be burned.
     function burn(uint256 _tokenId) public onlyOwner {
-        Chiev memory _chiev = chievs[_tokenId];
+        ChievUtils.Chiev storage _chiev = ChievUtils.chievs(_tokenId);
         uint256 gen0Id = _chiev.clonedFromId;
         if (_tokenId != gen0Id) {
-            Chiev memory _gen0Chiev = chievs[gen0Id];
+            ChievUtils.Chiev storage _gen0Chiev = ChievUtils.chievs(gen0Id);
             _gen0Chiev.numClonesInWild -= 1;
-            chievs[gen0Id] = _gen0Chiev;
         }
-        delete chievs[_tokenId];
+        ChievUtils.deleteChiev(_tokenId);
         _burn(_tokenId);
     }
 
@@ -340,7 +309,7 @@ contract MetaChievs is ERC721URIStorage, ERC721Enumerable, Ownable {
     /// @dev seMinterTokenRole(): Update the minter token role
     /// @param _permTokenId The Chiev ID to update
     function setMinterTokenRole(uint256 _permTokenId) public onlyOwner {
-        Chiev memory _gen0Chiev = chievs[_permTokenId];
+        ChievUtils.Chiev storage _gen0Chiev = ChievUtils.chievs(_permTokenId);
         require(
             _gen0Chiev.numClonesInWild < _gen0Chiev.numClonesAllowed,
             "invalid perm token"
@@ -363,9 +332,8 @@ contract MetaChievs is ERC721URIStorage, ERC721Enumerable, Ownable {
         public
         onlyOwner
     {
-        Chiev memory _chiev = chievs[_tokenId];
+        ChievUtils.Chiev storage _chiev = ChievUtils.chievs(_tokenId);
         _chiev.priceFinney = _newPriceFinney;
-        chievs[_tokenId] = _chiev;
         emit SetPrice(_tokenId, _newPriceFinney);
     }
 
@@ -378,10 +346,9 @@ contract MetaChievs is ERC721URIStorage, ERC721Enumerable, Ownable {
         uint256 _newPermTokenId,
         uint256 _newPermTokenMin
     ) public onlyOwner {
-        Chiev memory _chiev = chievs[_tokenId];
+        ChievUtils.Chiev storage _chiev = ChievUtils.chievs(_tokenId);
         _chiev.permTokenId = _newPermTokenId;
         _chiev.permTokenMin = _newPermTokenMin;
-        chievs[_tokenId] = _chiev;
         emit SetPermTokenId(_tokenId, _newPermTokenId, _newPermTokenMin);
     }
 
@@ -403,15 +370,14 @@ contract MetaChievs is ERC721URIStorage, ERC721Enumerable, Ownable {
         public
         onlyOwner
     {
-        Chiev memory _chiev = chievs[_tokenId];
+        ChievUtils.Chiev storage _chiev = ChievUtils.chievs(_tokenId);
         _chiev.typeCode = _typeCode;
-        chievs[_tokenId] = _chiev;
         emit SetTypeCode(_tokenId, _typeCode);
     }
 
-    /// @dev getChievsById(): Return a Chievs struct/array given a Chievs Id.
+    /// @dev getChievById(): Return a Chievs struct/array given a Chievs Id.
     /// @param _tokenId The Chievs Id.
-    function getChievsById(uint256 _tokenId)
+    function getChievById(uint256 _tokenId)
         public
         view
         returns (
@@ -425,16 +391,7 @@ contract MetaChievs is ERC721URIStorage, ERC721Enumerable, Ownable {
             string memory details
         )
     {
-        Chiev memory _chiev = chievs[_tokenId];
-
-        priceFinney = _chiev.priceFinney;
-        numClonesAllowed = _chiev.numClonesAllowed;
-        numClonesInWild = _chiev.numClonesInWild;
-        clonedFromId = _chiev.clonedFromId;
-        permTokenId = _chiev.permTokenId;
-        permTokenMin = _chiev.permTokenMin;
-        typeCode = _chiev.typeCode;
-        details = _chiev.details;
+        return ChievUtils.getChievById(_tokenId);
     }
 
     /// @dev getNumClonesInWild(): Return a Chievs struct/array given a Chievs Id.
@@ -443,21 +400,11 @@ contract MetaChievs is ERC721URIStorage, ERC721Enumerable, Ownable {
     function getNumClonesInWild(uint256 _tokenId)
         public
         view
-        returns (uint256 numClonesInWild)
+        returns (uint256)
     {
-        Chiev memory _chiev = chievs[_tokenId];
+        ChievUtils.Chiev storage chiev = ChievUtils.chievs(_tokenId);
 
-        numClonesInWild = _chiev.numClonesInWild;
-    }
-
-    /// @dev getLatestId(): Returns the newest Chievs Id in the chievs array.
-    /// @return tokenId the latest chievs id.
-    function getLatestId() public view returns (uint256 tokenId) {
-        if (chievs.length == 0) {
-            tokenId = 0;
-        } else {
-            tokenId = chievs.length - 1;
-        }
+        return chiev.numClonesInWild;
     }
 
     /// @dev balanceOfByGen0(): Returns count for owner of tokens of gen0
@@ -470,7 +417,7 @@ contract MetaChievs is ERC721URIStorage, ERC721Enumerable, Ownable {
         count = 0;
         for (uint256 i = 0; i < balanceOf(owner); i++) {
             uint256 tid = tokenOfOwnerByIndex(owner, i);
-            if (chievs[tid].clonedFromId == gen0TokenId) {
+            if (ChievUtils.chievs(tid).clonedFromId == gen0TokenId) {
                 count = count + 1;
             }
         }

@@ -49,7 +49,7 @@ async function main() {
 
   try {
     console.log('Verifying Contracts...');
-    metaChievs.deployTransaction.wait(5);
+    await metaChievs.deployTransaction.wait(5);
     const TASK_VERIFY = 'verify:verify';
 
     await run(TASK_VERIFY, {
