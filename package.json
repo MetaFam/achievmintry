@@ -1,5 +1,5 @@
 {
-  "name": "@project/monorepo",
+  "name": "@metafam/achievmintry",
   "version": "1.0.0",
   "keywords": [
     "ethereum",
@@ -9,15 +9,15 @@
   ],
   "private": true,
   "scripts": {
-    "subgraph:auth": "yarn workspace @project/subgraph auth",
-    "subgraph:codegen": "yarn workspace @project/subgraph codegen",
-    "subgraph:build": "yarn workspace @project/subgraph build",
-    "subgraph:deploy": "yarn workspace @project/subgraph deploy",
-    "react-app:build": "yarn workspace @project/react-app build",
-    "react-app:eject": "yarn workspace @project/react-app eject",
-    "react-app:ipfs": "yarn workspace @project/react-app ipfs",
-    "react-app:start": "yarn workspace @project/react-app start",
-    "react-app:test": "yarn workspace @project/react-app test"
+    "subgraph:auth": "yarn workspace @achievmintry/subgraph auth",
+    "subgraph:codegen": "yarn workspace @achievmintry/subgraph codegen",
+    "subgraph:build": "yarn workspace @achievmintry/subgraph build",
+    "subgraph:deploy": "yarn workspace @achievmintry/subgraph deploy",
+    "dapp:build": "yarn workspace @achievmintry/dapp build",
+    "dapp:eject": "yarn workspace @achievmintry/dapp eject",
+    "dapp:ipfs": "yarn workspace @achievmintry/dapp ipfs",
+    "dapp:start": "yarn workspace @achievmintry/dapp start",
+    "dapp:test": "yarn workspace @achievmintry/dapp test"
   },
   "workspaces": {
     "nohoist": [
