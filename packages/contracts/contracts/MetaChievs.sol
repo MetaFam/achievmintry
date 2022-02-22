@@ -97,7 +97,7 @@ contract MetaChievs is ERC721URIStorage, ERC721Enumerable, Ownable {
         _;
     }
 
-    constructor() ERC721("MetaChievToken", "CHIEV") {
+    constructor() ERC721("MetaChievs", "CHIEV") {
         // If the array is new, skip over the first index.
         if (chievs.length == 0) {
             Chiev memory _dummyChiev = Chiev({
