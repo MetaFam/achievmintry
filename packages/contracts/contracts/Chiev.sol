@@ -93,10 +93,7 @@ contract MetaChievs is ERC721URIStorage, ERC721Enumerable, Ownable {
     bool public isMintable = true;
 
     modifier mintable() {
-        require(
-            isMintable == true,
-            "minting closed"
-        );
+        require(isMintable == true, "minting closed");
         _;
     }
 
@@ -274,10 +271,7 @@ contract MetaChievs is ERC721URIStorage, ERC721Enumerable, Ownable {
                 _chiev.numClonesAllowed,
             "too many"
         );
-        require(
-            msg.value >= cloningCost,
-            "not enough funds"
-        );
+        require(msg.value >= cloningCost, "not enough funds");
 
         splitPayment(_tokenId, _numClonesRequested);
 

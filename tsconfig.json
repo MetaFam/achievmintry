@@ -1,11 +1,21 @@
 {
-    "exclude": ["packages/**/tests/**", "packages/**/dist/**"],
-    "references": [
-        {
-            "path": "./packages/shared"
-        },
-        {
-            "path": "./packages/sayhi"
-        }
+    "compilerOptions": {
+        "module": "esnext",
+        "target": "esnext",
+        "lib": ["esnext"],
+        "moduleResolution": "node",
+        "strict": true,
+        "forceConsistentCasingInFileNames": true,
+        "jsx": "react",
+        "skipLibCheck": true
+    },
+    "exclude": [
+        "**/node_modules",
+        "packages/subgraph/**",
+        "packages/**/tests/**",
+        "packages/**/types/**",
+        "packages/**/dist/**",
+        "packages/**/build/**",
+        "packages/**/out/**"
     ]
 }
