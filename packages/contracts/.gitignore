@@ -17,6 +17,7 @@ coverage.json
 # typescript
 types
 dist
+*.tsbuildinfo
 
 # hardhat
 cache

@@ -1,4 +1,4 @@
-import { abis } from "@project/contracts";
+import { abis } from "../contracts";
 
 export class TokenService {
   web3;

@@ -25,7 +25,7 @@ import { ExplorerLink } from "../components";
 
 import rainbowLoader from "../data/lotties/40796-rainbow-loading.json";
 import rainbowLove from "../data/lotties/439-love-explosion.json";
-import { addresses } from "@project/contracts";
+import { addresses } from "../contracts";
 import { Web3ChievsService } from "../utils/ChievsService";
 
 const TxProcessorInit = () => {

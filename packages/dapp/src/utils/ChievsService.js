@@ -1,4 +1,4 @@
-import { abis } from "@project/contracts";
+import { abis } from "../contracts";
 import Web3 from "web3";
 
 import logData from "../data/chain-logs/0-13722094.json"

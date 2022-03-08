@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 
-import { addresses } from "@project/contracts";
+import { addresses } from "../contracts";
 
 import { USER_TYPE } from "../utils/Auth";
 import { useChievs, useWeb3Connect } from "./DappContext";

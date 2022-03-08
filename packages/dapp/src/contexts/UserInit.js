@@ -3,7 +3,7 @@ import { Link, useToast, Box } from "@chakra-ui/react";
 
 import { getProfile } from "3box/lib/api";
 
-import { addresses } from "@project/contracts";
+import { addresses } from "../contracts";
 
 import { createWeb3User, w3connect } from "../utils/Auth";
 import { USER_TYPE } from "../utils/Auth";
